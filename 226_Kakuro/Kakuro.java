@@ -90,7 +90,6 @@ public class Kakuro {
                 Constraint oldConstraint = iterator.next();
                 if (oldConstraint.sum == constraint.sum && oldConstraint.positions == constraint.positions) {
                     newConstraintList.add(constraint);
-                    System.out.println("UPDATE");
                 } else {
                     newConstraintList.add(oldConstraint);
                 }
@@ -125,14 +124,51 @@ public class Kakuro {
 //                       "6 A2 B2\n" +
 //                       "9 A3 B3\n";
 
-        String input = "4 3\n" +
-                       "3 C1 D1\n" +
-                       "10 A2 B2 C2 D2\n" +
-                       "3 A3 B3\n" +
-                       "4 A2 A3\n" +
-                       "3 B2 B3\n" +
-                       "6 C1 C2\n" +
-                       "3 D1 D2";
+//        String input = "4 3\n" +
+//                       "3 C1 D1\n" +
+//                       "10 A2 B2 C2 D2\n" +
+//                       "3 A3 B3\n" +
+//                       "4 A2 A3\n" +
+//                       "3 B2 B3\n" +
+//                       "6 C1 C2\n" +
+//                       "3 D1 D2";
+
+        String input = "8 8\n"
+                     + "21 A1 A2 A3 A4\n"
+                     + "3 A7 A8\n"
+                     + "11 B1 B2 B3 B4\n"
+                     + "6 B6 B7 B8\n"
+                     + "3 C2 C3\n"
+                     + "4 C5 C6\n"
+                     + "4 D1 D2\n"
+                     + "15 D4 D5 D6 D7 D8\n"
+                     + "15 E1 E2 E3 E4 E5\n"
+                     + "4 E7 E8\n"
+                     + "3 F3 F4\n"
+                     + "4 F6 F7\n"
+                     + "7 G1 G2 G3\n"
+                     + "15 G5 G6 G7 G8\n"
+                     + "4 H1 H2\n"
+                     + "21 H5 H6 H7 H8\n"
+                     + "3 A1 B1\n"
+                     + "8 D1 E1\n"
+                     + "4 G1 H1\n"
+                     + "16 A2 B2 C2 D2 E2\n"
+                     + "3 G2 H2\n"
+                     + "7 A3 B3 C3\n"
+                     + "7 E3 F3 G3\n"
+                     + "14 A4 B4\n"
+                     + "6 D4 E4 F4\n"
+                     + "7 C5 D5 E5\n"
+                     + "17 G5 H5\n"
+                     + "6 B6 C6 D6\n"
+                     + "6 F6 G6 H6\n"
+                     + "4 A7 B7\n"
+                     + "21 D7 E7 F7 G7 H7\n"
+                     + "3 A8 B8\n"
+                     + "4 D8 E8\n"
+                     + "4 G8 H8"
+                     ;
 
         ConstraintMultiMap constraintMap = new ConstraintMultiMap();
         List<Constraint> constraintList = new ArrayList<>();
@@ -199,9 +235,14 @@ public class Kakuro {
                                                                    int totalPositions) {
         System.out.println("ConstraintValuesSize: " + constraintValues.size() + " " + totalPositions + " " + constraintValues);
 
-        if (constraintValues.size() == totalPositions) {
+//        if (constraintValues.size() == totalPositions) {
+//            return constraintValues;
+//        }
+
+        if (minimumRemainingValues.size() == 0) {
             return constraintValues;
         }
+
 //        if (assignmentIsComplete(grid)) {
 //            return grid;
 //        }
@@ -247,7 +288,9 @@ public class Kakuro {
                     if (updatedConstraint.getRemainingValues() > 0) {
                         newMinimumRemainingValues.add(updatedConstraint);
                     }
-                    newConstraintMap.updateConstraint(position, updatedConstraint);
+                    for (String constraintPosition : updatedConstraint.getPositions()) {
+                        newConstraintMap.updateConstraint(constraintPosition, updatedConstraint);
+                    }
                     System.out.println("UPDATED CONSTRAINT " + updatedConstraint + " " + updatedConstraint.getRemainingValues());
                 }
 
@@ -282,10 +325,13 @@ public class Kakuro {
                         if (updatedConstraint.getRemainingValues() > 0) {
                             newMinimumRemainingValues.add(updatedConstraint);
                         }
-                        newConstraintMap.updateConstraint(position, updatedConstraint);
+                        for (String constraintPosition : updatedConstraint.getPositions()) {
+                            newConstraintMap.updateConstraint(constraintPosition, updatedConstraint);
+                        }
                         System.out.println("UPDATED CONSTRAINT 2+ " + updatedConstraint + " " + updatedConstraint.getRemainingValues());
                     }
                     System.out.println("NEW CONSTRAINT MAP 2+: " + newConstraintMap);
+                    System.out.println("NEWMRVs 2+: " + newMinimumRemainingValues);
 
                     Map<String, Integer> result = recursiveBacktrackingSearch(newConstraintValues, newMinimumRemainingValues, constraintMap, totalPositions);
                     if (result != null) {
@@ -373,18 +419,6 @@ public class Kakuro {
                 return false;
             } else if (!missingConstraints && calculatedSum != constraint.getSum()) {
                 return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean assignmentIsComplete(int[][] grid) {
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[0].length; j++) {
-                if (grid[i][j] == 0) {
-                    return false;
-                }
             }
         }
 

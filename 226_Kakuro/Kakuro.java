@@ -10,7 +10,6 @@ public class Kakuro {
         public Constraint(int sum, List<String> positions) {
             this.sum = sum;
             this.positions = positions;
-            this.remainingValues = positions.size();
         }
 
         public Constraint deepCopy() {
@@ -27,14 +26,6 @@ public class Kakuro {
             return positions;
         }
 
-        public void reduceRemainingValue() {
-            remainingValues--;
-        }
-
-        public int getRemainingValues() {
-            return remainingValues;
-        }
-
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof Constraint) {
@@ -47,7 +38,7 @@ public class Kakuro {
 
         @Override
         public String toString() {
-            return "sum: " + sum + " positions: " + positions + " rv: " + remainingValues;
+            return "sum: " + sum + " positions: " + positions;
         }
     }
 
@@ -77,13 +68,6 @@ public class Kakuro {
         }
 
         public void updateConstraint(String position, Constraint constraint) {
-//            List<Constraint> constraints = multiMap.get(position);
-//            for (Constraint oldConstraint : multiMap.get(position)) {
-//                if (oldConstraint.sum == constraint.sum && oldConstraint.positions == constraint.positions) {
-//                    constraints.remove(oldConstraint);
-//                    constraints.add(constraint);
-//                }
-//            }
             List<Constraint> newConstraintList = new ArrayList<>();
             Iterator<Constraint> iterator = multiMap.get(position).iterator();
             while(iterator.hasNext()) {
@@ -96,6 +80,10 @@ public class Kakuro {
             }
 
             this.multiMap.put(position, newConstraintList);
+        }
+
+        public int size() {
+            return multiMap.size();
         }
 
         public int getDegree(String position) {
@@ -200,46 +188,46 @@ public class Kakuro {
 
     }
 
-    public static class ConstraintComparator implements Comparator<Constraint> {
-
-        @Override
-        public int compare(Constraint constraint1, Constraint constraint2) {
-            if (constraint1.getRemainingValues() < constraint2.getRemainingValues()) {
-                return -1;
-            } else if (constraint2.getRemainingValues() < constraint1.getRemainingValues()) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-    }
+//    public static class ConstraintComparator implements Comparator<Constraint> {
+//
+//        @Override
+//        public int compare(Constraint constraint1, Constraint constraint2) {
+//            if (constraint1.getRemainingValues() < constraint2.getRemainingValues()) {
+//                return -1;
+//            } else if (constraint2.getRemainingValues() < constraint1.getRemainingValues()) {
+//                return 1;
+//            } else {
+//                return 0;
+//            }
+//        }
+//    }
 
     public static int[][] backtrackingSearch(List<Constraint> constraintList, ConstraintMultiMap constraintMap, int rows, int columns) {
-        Queue<Constraint> minimumRemainingValues = new PriorityQueue<>(new ConstraintComparator());
-        minimumRemainingValues.addAll(constraintList);
-        Map<String, Integer> constraintValues = new HashMap<>();
+        Map<Constraint, Integer> remainingValuesMap = new HashMap<>();
+        for (Constraint constraint : constraintList) {
+            remainingValuesMap.put(constraint, constraint.getPositions().size());
+        }
 
+        Map<String, Integer> constraintValues = new HashMap<>();
         int totalPositions = rows * columns;
 
-        System.out.println("Minimum remaining values: " + minimumRemainingValues);
-
-        Map<String, Integer> answer = recursiveBacktrackingSearch(constraintValues, minimumRemainingValues, constraintMap, totalPositions);
+        Map<String, Integer> answer = recursiveBacktrackingSearch(constraintValues, remainingValuesMap, constraintMap, totalPositions);
         System.out.println("Answer: " + answer);
 
         return null;
     }
 
     public static Map<String, Integer> recursiveBacktrackingSearch(Map<String, Integer> constraintValues,
-                                                                   Queue<Constraint> minimumRemainingValues,
+                                                                   Map<Constraint, Integer> remainingValuesMap,
                                                                    ConstraintMultiMap constraintMap,
                                                                    int totalPositions) {
-        System.out.println("ConstraintValuesSize: " + constraintValues.size() + " " + totalPositions + " " + constraintValues);
+        System.out.println("ConstraintValuesSize: " + constraintValues.size() + " " + constraintMap.size() + " " + constraintValues);
 
 //        if (constraintValues.size() == totalPositions) {
 //            return constraintValues;
 //        }
 
-        if (minimumRemainingValues.size() == 0) {
+        if (constraintValues.size() == constraintMap.size()) {
             return constraintValues;
         }
 
@@ -248,9 +236,9 @@ public class Kakuro {
 //        }
 
         /* Use the MRV heuristic to determine which constraint to fulfill */
-        Constraint mrvConstraint = minimumRemainingValues.poll();
+        Constraint mrvConstraint = getMinimumRemainingValuesConstraint(remainingValuesMap);
 
-        System.out.println("MRV CONSTRAINT: " + mrvConstraint + " " + mrvConstraint.getRemainingValues() + " " + constraintValues);
+        System.out.println("MRV CONSTRAINT: " + mrvConstraint + " " + remainingValuesMap.get(mrvConstraint) + " " + constraintValues);
 
         /* Get the next grid position to fill by using the degree heuristic */
         String position = getUnassignedPosition(constraintValues, mrvConstraint, constraintMap);
@@ -260,38 +248,26 @@ public class Kakuro {
 //        /* Create a priority queue to sort the constraints by lowest to highest remaining values */
 //        Queue<Constraint> constraintQueue = new PriorityQueue<>(new ConstraintComparator());
 //        constraintQueue.addAll(constraintMap.getConstraints(position));
-//
 
         Map<String, Integer> newConstraintValues = null;
-        Queue<Constraint> newMinimumRemainingValues = null;
         ConstraintMultiMap newConstraintMap = new ConstraintMultiMap(constraintMap);
 
         /* If there is a single value to fulfill, determine if that value is
          * valid (conforms with other constraints) and recurse. If not, return.
          */
-        if (mrvConstraint.getRemainingValues() == 1) {
+        if (remainingValuesMap.get(mrvConstraint) == 1) {
             newConstraintValues = satisfyConstraint(position, constraintValues, mrvConstraint);
 
-            System.out.println("1 remaining, new constraint values: " + newConstraintValues);
+//            System.out.println("1 remaining, new constraint values: " + newConstraintValues);
 
             if (constraintValuesAreValid(newConstraintValues, position, constraintMap)) {
 
                 /* Once a value is chosen for a position, update all constraints
                  * which use that value.
                  */
-                newMinimumRemainingValues = new PriorityQueue<>(minimumRemainingValues);
+                Map<Constraint, Integer> newRemainingValuesMap = new HashMap<>(remainingValuesMap);
                 for (Constraint constraintToUpdate : constraintMap.getConstraints(position)) {
-                    System.out.println("UNUPDATED CONSTRAINT " + constraintToUpdate + " " + constraintToUpdate.getRemainingValues());
-                    newMinimumRemainingValues.remove(constraintToUpdate);
-                    Constraint updatedConstraint = constraintToUpdate.deepCopy();
-                    updatedConstraint.reduceRemainingValue();
-                    if (updatedConstraint.getRemainingValues() > 0) {
-                        newMinimumRemainingValues.add(updatedConstraint);
-                    }
-                    for (String constraintPosition : updatedConstraint.getPositions()) {
-                        newConstraintMap.updateConstraint(constraintPosition, updatedConstraint);
-                    }
-                    System.out.println("UPDATED CONSTRAINT " + updatedConstraint + " " + updatedConstraint.getRemainingValues());
+                    newRemainingValuesMap.put(constraintToUpdate, remainingValuesMap.get(constraintToUpdate) - 1);
                 }
 
                 System.out.println("NEW CONSTRAINT MAP: " + newConstraintMap);
@@ -301,39 +277,26 @@ public class Kakuro {
 //                    newMinimumRemainingValues.remove(constraintToUpdate);
 //                }
 
-                System.out.println("NEWMRVs: " + newMinimumRemainingValues);
-
-                return recursiveBacktrackingSearch(newConstraintValues, newMinimumRemainingValues, constraintMap, totalPositions);
+                return recursiveBacktrackingSearch(newConstraintValues, newRemainingValuesMap, constraintMap, totalPositions);
             }
         } else {
             newConstraintValues = new HashMap<>(constraintValues);
             for (int i = 1; i <= 9; i++) {
                 newConstraintValues.put(position, i);
 
-                System.out.println("VALID: " + i + " " + constraintValuesAreValid(newConstraintValues, position, constraintMap));
+//                System.out.println("VALID: " + i + " " + constraintValuesAreValid(newConstraintValues, position, constraintMap));
 
                 if (constraintValuesAreValid(newConstraintValues, position, constraintMap)) {
                     /* Once a value is chosen for a position, update all constraints
                     * which use that value.
                     */
-                    newMinimumRemainingValues = new PriorityQueue<>(minimumRemainingValues);
+                    Map<Constraint, Integer> newRemainingValuesMap = new HashMap<>(remainingValuesMap);
                     for (Constraint constraintToUpdate : constraintMap.getConstraints(position)) {
-                        System.out.println("UNUPDATED CONSTRAINT 2+" + constraintToUpdate + " " + constraintToUpdate.getRemainingValues());
-                        newMinimumRemainingValues.remove(constraintToUpdate);
-                        Constraint updatedConstraint = constraintToUpdate.deepCopy();
-                        updatedConstraint.reduceRemainingValue();
-                        if (updatedConstraint.getRemainingValues() > 0) {
-                            newMinimumRemainingValues.add(updatedConstraint);
-                        }
-                        for (String constraintPosition : updatedConstraint.getPositions()) {
-                            newConstraintMap.updateConstraint(constraintPosition, updatedConstraint);
-                        }
-                        System.out.println("UPDATED CONSTRAINT 2+ " + updatedConstraint + " " + updatedConstraint.getRemainingValues());
+                        newRemainingValuesMap.put(constraintToUpdate, remainingValuesMap.get(constraintToUpdate) - 1);
                     }
                     System.out.println("NEW CONSTRAINT MAP 2+: " + newConstraintMap);
-                    System.out.println("NEWMRVs 2+: " + newMinimumRemainingValues);
 
-                    Map<String, Integer> result = recursiveBacktrackingSearch(newConstraintValues, newMinimumRemainingValues, constraintMap, totalPositions);
+                    Map<String, Integer> result = recursiveBacktrackingSearch(newConstraintValues, newRemainingValuesMap, constraintMap, totalPositions);
                     if (result != null) {
                         return result;
                     }
@@ -342,6 +305,22 @@ public class Kakuro {
         }
 
         return null;
+    }
+
+    public static Constraint getMinimumRemainingValuesConstraint(Map<Constraint, Integer> remainingValuesMap) {
+        int currentMRV = Integer.MAX_VALUE;
+        Constraint currentConstraint = null;
+
+        for (Constraint constraint : remainingValuesMap.keySet()) {
+//            System.out.println("Constraint: " + constraint + " " + remainingValuesMap.get(constraint));
+            int constraintRemainingValues = remainingValuesMap.get(constraint);
+            if (constraintRemainingValues > 0 && constraintRemainingValues < currentMRV) {
+                currentMRV = constraintRemainingValues;
+                currentConstraint = constraint;
+            }
+        }
+
+        return currentConstraint;
     }
 
     /**
@@ -398,7 +377,7 @@ public class Kakuro {
     public static boolean constraintValuesAreValid(Map<String, Integer> constraintValues, String position, ConstraintMultiMap constraintMultiMap) {
         List<Constraint> constraints = constraintMultiMap.getConstraints(position);
 
-        System.out.println("VALID constraints check: " + constraints + " " + constraintValues);
+//        System.out.println("VALID constraints check: " + constraints + " " + constraintValues);
 
         for (Constraint constraint : constraints) {
             int calculatedSum = 0;

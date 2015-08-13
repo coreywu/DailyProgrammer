@@ -102,8 +102,8 @@ public class Kakuro {
 
     public static void main(String[] args) {
 
-//        String input = "1 2\n" +
-//                       "3 A1 A2";
+        String input = "1 2\n" +
+                       "3 A1 A2";
 
 //        String input = "2 3\n" +
 //                       "13 A1 A2 A3\n" +
@@ -121,42 +121,42 @@ public class Kakuro {
 //                       "6 C1 C2\n" +
 //                       "3 D1 D2";
 
-        String input = "8 8\n"
-                     + "21 A1 A2 A3 A4\n"
-                     + "3 A7 A8\n"
-                     + "11 B1 B2 B3 B4\n"
-                     + "6 B6 B7 B8\n"
-                     + "3 C2 C3\n"
-                     + "4 C5 C6\n"
-                     + "4 D1 D2\n"
-                     + "15 D4 D5 D6 D7 D8\n"
-                     + "15 E1 E2 E3 E4 E5\n"
-                     + "4 E7 E8\n"
-                     + "3 F3 F4\n"
-                     + "4 F6 F7\n"
-                     + "7 G1 G2 G3\n"
-                     + "15 G5 G6 G7 G8\n"
-                     + "4 H1 H2\n"
-                     + "21 H5 H6 H7 H8\n"
-                     + "3 A1 B1\n"
-                     + "8 D1 E1\n"
-                     + "4 G1 H1\n"
-                     + "16 A2 B2 C2 D2 E2\n"
-                     + "3 G2 H2\n"
-                     + "7 A3 B3 C3\n"
-                     + "7 E3 F3 G3\n"
-                     + "14 A4 B4\n"
-                     + "6 D4 E4 F4\n"
-                     + "7 C5 D5 E5\n"
-                     + "17 G5 H5\n"
-                     + "6 B6 C6 D6\n"
-                     + "6 F6 G6 H6\n"
-                     + "4 A7 B7\n"
-                     + "21 D7 E7 F7 G7 H7\n"
-                     + "3 A8 B8\n"
-                     + "4 D8 E8\n"
-                     + "4 G8 H8"
-                     ;
+//        String input = "8 8\n"
+//                     + "21 A1 A2 A3 A4\n"
+//                     + "3 A7 A8\n"
+//                     + "11 B1 B2 B3 B4\n"
+//                     + "6 B6 B7 B8\n"
+//                     + "3 C2 C3\n"
+//                     + "4 C5 C6\n"
+//                     + "4 D1 D2\n"
+//                     + "15 D4 D5 D6 D7 D8\n"
+//                     + "15 E1 E2 E3 E4 E5\n"
+//                     + "4 E7 E8\n"
+//                     + "3 F3 F4\n"
+//                     + "4 F6 F7\n"
+//                     + "7 G1 G2 G3\n"
+//                     + "15 G5 G6 G7 G8\n"
+//                     + "4 H1 H2\n"
+//                     + "21 H5 H6 H7 H8\n"
+//                     + "3 A1 B1\n"
+//                     + "8 D1 E1\n"
+//                     + "4 G1 H1\n"
+//                     + "16 A2 B2 C2 D2 E2\n"
+//                     + "3 G2 H2\n"
+//                     + "7 A3 B3 C3\n"
+//                     + "7 E3 F3 G3\n"
+//                     + "14 A4 B4\n"
+//                     + "6 D4 E4 F4\n"
+//                     + "7 C5 D5 E5\n"
+//                     + "17 G5 H5\n"
+//                     + "6 B6 C6 D6\n"
+//                     + "6 F6 G6 H6\n"
+//                     + "4 A7 B7\n"
+//                     + "21 D7 E7 F7 G7 H7\n"
+//                     + "3 A8 B8\n"
+//                     + "4 D8 E8\n"
+//                     + "4 G8 H8"
+//                     ;
 
         ConstraintMultiMap constraintMap = new ConstraintMultiMap();
         List<Constraint> constraintList = new ArrayList<>();
@@ -164,7 +164,7 @@ public class Kakuro {
         String[] splitInput = input.split("\n");
         int columns = Integer.parseInt(splitInput[0].split(" ")[0]);
         int rows = Integer.parseInt(splitInput[0].split(" ")[1]);
-        int[][] result = new int[rows][columns];
+        char[][] result = new char[rows][columns];
 
         for (int i = 1; i < splitInput.length; i++) {
             String[] constraintInput = splitInput[i].split(" ");
@@ -184,7 +184,21 @@ public class Kakuro {
 
         System.out.println(constraintMap);
 
-        backtrackingSearch(constraintList, constraintMap, rows, columns);
+        result = backtrackingSearch(constraintList, constraintMap, rows, columns);
+
+        System.out.print("  ");
+        for (int i = 0; i < columns; i++) {
+            System.out.print((char)(i + 65) + " ");
+        }
+        System.out.println();
+
+        for (int i = 0; i < rows; i++) {
+            System.out.print((i + 1) + " ");
+            for (int j = 0; j < columns; j++) {
+                System.out.print(result[i][j] + " ");
+            }
+            System.out.println();
+        }
 
     }
 
@@ -202,7 +216,7 @@ public class Kakuro {
 //        }
 //    }
 
-    public static int[][] backtrackingSearch(List<Constraint> constraintList, ConstraintMultiMap constraintMap, int rows, int columns) {
+    public static char[][] backtrackingSearch(List<Constraint> constraintList, ConstraintMultiMap constraintMap, int rows, int columns) {
         Map<Constraint, Integer> remainingValuesMap = new HashMap<>();
         for (Constraint constraint : constraintList) {
             remainingValuesMap.put(constraint, constraint.getPositions().size());
@@ -211,10 +225,25 @@ public class Kakuro {
         Map<String, Integer> constraintValues = new HashMap<>();
         int totalPositions = rows * columns;
 
-        Map<String, Integer> answer = recursiveBacktrackingSearch(constraintValues, remainingValuesMap, constraintMap, totalPositions);
-        System.out.println("Answer: " + answer);
+        Map<String, Integer> finalValues = recursiveBacktrackingSearch(constraintValues, remainingValuesMap, constraintMap, totalPositions);
+        System.out.println("Answer: " + finalValues);
 
-        return null;
+        char[][] grid = new char[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                String position = Character.toString((char)(j + 65)) + (i + 1);
+                if (finalValues.containsKey(position)) {
+                    System.out.println("FINAL VALUE: " + (char)(j+ 65) + (i + 1) + " " + finalValues.get(position) + " " + Character.toChars(finalValues.get(position) + 48)[0]);
+                    grid[i][j] = Character.toChars(finalValues.get(position) + 48)[0];
+                    System.out.println("FINALVALUE: " + grid[i][j]);
+                } else {
+                    grid[i][j] = ' ';
+                }
+            }
+        }
+
+        return grid;
     }
 
     public static Map<String, Integer> recursiveBacktrackingSearch(Map<String, Integer> constraintValues,
@@ -386,6 +415,9 @@ public class Kakuro {
             for (String constraintPosition : constraint.getPositions()) {
 //                System.out.println("Constraint position: " + constraintPosition + " contains key? " + constraintValues.containsKey(constraintPosition) + " null? " + (constraintValues.get(constraintPosition) == null));
                 if (constraintValues.containsKey(constraintPosition)) {
+                    if (constraintValues.get(constraintPosition) > 9) {
+                        return false;
+                    }
                     calculatedSum += constraintValues.get(constraintPosition);
                 } else {
                     missingConstraints = true;

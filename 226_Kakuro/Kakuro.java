@@ -2,10 +2,12 @@ import java.util.*;
 
 public class Kakuro {
 
+    /**
+     * A data structure which holds the required sum for a set of positions.
+     */
     public static class Constraint {
         private int sum;
         private List<String> positions;
-        private int remainingValues;
 
         public Constraint(int sum, List<String> positions) {
             this.sum = sum;
@@ -24,7 +26,7 @@ public class Kakuro {
         public boolean equals(Object obj) {
             if (obj instanceof Constraint) {
                 Constraint that = (Constraint) obj;
-                return this.sum == that.sum && this.positions.equals(that.positions) && this.remainingValues == that.remainingValues;
+                return this.sum == that.sum && this.positions.equals(that.positions);
             } else {
                 return false;
             }
@@ -36,15 +38,15 @@ public class Kakuro {
         }
     }
 
+    /**
+     * A map of positions (A1, A2, D3, etc.) to all constraints which contain
+     * that position.
+     */
     public static class ConstraintMultiMap {
         private Map<String, List<Constraint>> multiMap;
 
         public ConstraintMultiMap() {
             multiMap = new HashMap<>();
-        }
-
-        public ConstraintMultiMap(ConstraintMultiMap constraintMultiMap) {
-            this.multiMap = constraintMultiMap.multiMap;
         }
 
         public void putConstraint(String position, Constraint constraint) {
@@ -65,6 +67,12 @@ public class Kakuro {
             return multiMap.size();
         }
 
+        /**
+         * Return the number of constraints which include a specified position.
+         * This is used for the degree heuristic.
+         * @param position  The specified position
+         * @return The number of constraints which include the position
+         */
         public int getDegree(String position) {
             if (multiMap.containsKey(position)) {
                 return multiMap.get(position).size();
@@ -81,62 +89,70 @@ public class Kakuro {
 
     public static void main(String[] args) {
 
-        String input = "1 2\n" +
-                       "3 A1 A2";
+        String input1 = "1 2\n"
+                      + "3 A1 A2";
 
-//        String input = "2 3\n" +
-//                       "13 A1 A2 A3\n" +
-//                       "8 B1 B2 B3\n" +
-//                       "6 A1 B1\n" +
-//                       "6 A2 B2\n" +
-//                       "9 A3 B3\n";
+        String input2 = "2 3\n"
+                      + "13 A1 A2 A3\n"
+                      + "8 B1 B2 B3\n"
+                      + "6 A1 B1\n"
+                      + "6 A2 B2\n"
+                      + "9 A3 B3\n";
 
-//        String input = "4 3\n" +
-//                       "3 C1 D1\n" +
-//                       "10 A2 B2 C2 D2\n" +
-//                       "3 A3 B3\n" +
-//                       "4 A2 A3\n" +
-//                       "3 B2 B3\n" +
-//                       "6 C1 C2\n" +
-//                       "3 D1 D2";
+        String input3 = "4 3\n"
+                      + "3 C1 D1\n"
+                      + "10 A2 B2 C2 D2\n"
+                      + "3 A3 B3\n"
+                      + "4 A2 A3\n"
+                      + "3 B2 B3\n"
+                      + "6 C1 C2\n"
+                      + "3 D1 D2";
 
-//        String input = "8 8\n"
-//                     + "21 A1 A2 A3 A4\n"
-//                     + "3 A7 A8\n"
-//                     + "11 B1 B2 B3 B4\n"
-//                     + "6 B6 B7 B8\n"
-//                     + "3 C2 C3\n"
-//                     + "4 C5 C6\n"
-//                     + "4 D1 D2\n"
-//                     + "15 D4 D5 D6 D7 D8\n"
-//                     + "15 E1 E2 E3 E4 E5\n"
-//                     + "4 E7 E8\n"
-//                     + "3 F3 F4\n"
-//                     + "4 F6 F7\n"
-//                     + "7 G1 G2 G3\n"
-//                     + "15 G5 G6 G7 G8\n"
-//                     + "4 H1 H2\n"
-//                     + "21 H5 H6 H7 H8\n"
-//                     + "3 A1 B1\n"
-//                     + "8 D1 E1\n"
-//                     + "4 G1 H1\n"
-//                     + "16 A2 B2 C2 D2 E2\n"
-//                     + "3 G2 H2\n"
-//                     + "7 A3 B3 C3\n"
-//                     + "7 E3 F3 G3\n"
-//                     + "14 A4 B4\n"
-//                     + "6 D4 E4 F4\n"
-//                     + "7 C5 D5 E5\n"
-//                     + "17 G5 H5\n"
-//                     + "6 B6 C6 D6\n"
-//                     + "6 F6 G6 H6\n"
-//                     + "4 A7 B7\n"
-//                     + "21 D7 E7 F7 G7 H7\n"
-//                     + "3 A8 B8\n"
-//                     + "4 D8 E8\n"
-//                     + "4 G8 H8"
-//                     ;
+        String input4 = "8 8\n"
+                     + "21 A1 A2 A3 A4\n"
+                     + "3 A7 A8\n"
+                     + "11 B1 B2 B3 B4\n"
+                     + "6 B6 B7 B8\n"
+                     + "3 C2 C3\n"
+                     + "4 C5 C6\n"
+                     + "4 D1 D2\n"
+                     + "15 D4 D5 D6 D7 D8\n"
+                     + "15 E1 E2 E3 E4 E5\n"
+                     + "4 E7 E8\n"
+                     + "3 F3 F4\n"
+                     + "4 F6 F7\n"
+                     + "7 G1 G2 G3\n"
+                     + "15 G5 G6 G7 G8\n"
+                     + "4 H1 H2\n"
+                     + "21 H5 H6 H7 H8\n"
+                     + "3 A1 B1\n"
+                     + "8 D1 E1\n"
+                     + "4 G1 H1\n"
+                     + "16 A2 B2 C2 D2 E2\n"
+                     + "3 G2 H2\n"
+                     + "7 A3 B3 C3\n"
+                     + "7 E3 F3 G3\n"
+                     + "14 A4 B4\n"
+                     + "6 D4 E4 F4\n"
+                     + "7 C5 D5 E5\n"
+                     + "17 G5 H5\n"
+                     + "6 B6 C6 D6\n"
+                     + "6 F6 G6 H6\n"
+                     + "4 A7 B7\n"
+                     + "21 D7 E7 F7 G7 H7\n"
+                     + "3 A8 B8\n"
+                     + "4 D8 E8\n"
+                     + "4 G8 H8"
+                     ;
 
+        solveKakuro(input1);
+        solveKakuro(input2);
+        solveKakuro(input3);
+        solveKakuro(input4);
+
+    }
+
+    public static void solveKakuro(String input) {
         ConstraintMultiMap constraintMap = new ConstraintMultiMap();
         List<Constraint> constraintList = new ArrayList<>();
 
@@ -176,10 +192,17 @@ public class Kakuro {
             }
             System.out.println();
         }
-
+        System.out.println();
     }
 
-    public static char[][] backtrackingSearch(List<Constraint> constraintList, ConstraintMultiMap constraintMap, int rows, int columns) {
+    /**
+     * Set up the recursive backtracking search for selecting values that
+     * fulfill a set of constraints.
+     */
+    public static char[][] backtrackingSearch(List<Constraint> constraintList,
+                                              ConstraintMultiMap constraintMap,
+                                              int rows,
+                                              int columns) {
         Map<Constraint, Integer> remainingValuesMap = new HashMap<>();
         for (Constraint constraint : constraintList) {
             remainingValuesMap.put(constraint, constraint.getPositions().size());
@@ -205,13 +228,32 @@ public class Kakuro {
         return grid;
     }
 
+    /**
+     * Backtracking search which uses the minimum remaining values (MRV or most
+     * constrained variable) and degree heuristics to prune the search tree.
+     *
+     * The search algorithm selects a position and if that position only allows
+     * for a single value based on a constraint, it fills that position with
+     * the value. The new value is then checked against all constraints that
+     * involve it for validity. If the position has more than one currently
+     * valid value, it recurses with the position filled with all values from
+     * 1 to 9.
+     *
+     * @param constraintValues  A map of positions to values.
+     * @param remainingValuesMap  A map of constraints to the number of
+     *                            remaining values in that constraint.
+     * @param constraintMap  A map of positions to a list of all constraints
+     *                       that involved that position.
+     * @return A map of all positions to valid values or null if no valid
+     * combination can exist from the current values.
+     */
     public static Map<String, Integer> recursiveBacktrackingSearch(Map<String, Integer> constraintValues,
                                                                    Map<Constraint, Integer> remainingValuesMap,
                                                                    ConstraintMultiMap constraintMap) {
-
         if (constraintValues.size() == constraintMap.size()) {
             return constraintValues;
         }
+        Map<String, Integer> newConstraintValues;
 
         /* Use the MRV heuristic to determine which constraint to fulfill */
         Constraint mrvConstraint = getMinimumRemainingValuesConstraint(remainingValuesMap);
@@ -219,17 +261,16 @@ public class Kakuro {
         /* Get the next grid position to fill by using the degree heuristic */
         String position = getUnassignedPosition(constraintValues, mrvConstraint, constraintMap);
 
-        Map<String, Integer> newConstraintValues = null;
-        ConstraintMultiMap newConstraintMap = new ConstraintMultiMap(constraintMap);
-
-        /* If there is a single value to fulfill, determine if that value is
+        /*
+         * If there is a single value to fulfill, determine if that value is
          * valid (conforms with other constraints) and recurse. If not, return.
          */
         if (remainingValuesMap.get(mrvConstraint) == 1) {
             newConstraintValues = satisfyConstraint(position, constraintValues, mrvConstraint);
 
             if (constraintValuesAreValid(newConstraintValues, position, constraintMap)) {
-                /* Once a value is chosen for a position, update all constraints
+                /*
+                 * Once a value is chosen for a position, update all constraints
                  * which use that value.
                  */
                 Map<Constraint, Integer> newRemainingValuesMap = new HashMap<>(remainingValuesMap);
@@ -245,15 +286,17 @@ public class Kakuro {
                 newConstraintValues.put(position, i);
 
                 if (constraintValuesAreValid(newConstraintValues, position, constraintMap)) {
-                    /* Once a value is chosen for a position, update all constraints
-                    * which use that value.
-                    */
+                    /*
+                     * Once a value is chosen for a position, update all constraints
+                     * which use that value.
+                     */
                     Map<Constraint, Integer> newRemainingValuesMap = new HashMap<>(remainingValuesMap);
                     for (Constraint constraintToUpdate : constraintMap.getConstraints(position)) {
                         newRemainingValuesMap.put(constraintToUpdate, remainingValuesMap.get(constraintToUpdate) - 1);
                     }
 
-                    Map<String, Integer> result = recursiveBacktrackingSearch(newConstraintValues, newRemainingValuesMap, constraintMap);
+                    Map<String, Integer> result = recursiveBacktrackingSearch(
+                            newConstraintValues, newRemainingValuesMap, constraintMap);
                     if (result != null) {
                         return result;
                     }
@@ -264,6 +307,17 @@ public class Kakuro {
         return null;
     }
 
+    /**
+     * Returns the Constraint that has the least number of remaining values to
+     * fill. Using the minimum remaining values (MRV) heuristic, we can prune
+     * the search tree by fulfilling constraints that are nearing completion.
+     * These constraints have fewer legal values compared to other
+     * possibilities.
+     *
+     * @param remainingValuesMap  A map of constraints to the number of
+     *                            remaining values in that constraint
+     * @return the constraint with the minimum remaining values.
+     */
     public static Constraint getMinimumRemainingValuesConstraint(Map<Constraint, Integer> remainingValuesMap) {
         int currentMRV = Integer.MAX_VALUE;
         Constraint currentConstraint = null;
@@ -280,9 +334,11 @@ public class Kakuro {
     }
 
     /**
-     * Returns a position by first selecting a constraint using the minimum
-     * remaining values (MRV) heuristic, then selecting the position using
-     * the degree heuristic.
+     * Returns the position with the highest degree (used in the most
+     * number of constraints) from the constraint given. This uses the degree
+     * heuristic to reduce the branching factor on future choices. The
+     * position that is involved with the greatest number of constraints causes
+     * failures to occur earlier.
      *
      * Using these two heuristics prunes the search tree. The MRV heuristic
      * selects a variable that is likely to fail early if it is invalid. The
@@ -296,7 +352,9 @@ public class Kakuro {
      *         remaining value and has the highest degree of all positions
      *         within that constraint
      */
-    public static String getUnassignedPosition(Map<String, Integer> constraintValues, Constraint minimumRemainingConstraint, ConstraintMultiMap constraintMultiMap) {
+    public static String getUnassignedPosition(Map<String, Integer> constraintValues,
+                                               Constraint minimumRemainingConstraint,
+                                               ConstraintMultiMap constraintMultiMap) {
         String unassignedPositionWithHighestDegree = null;
         int highestDegree = 0;
 
@@ -308,7 +366,6 @@ public class Kakuro {
                     unassignedPositionWithHighestDegree = position;
                 }
             }
-
         }
 
         return unassignedPositionWithHighestDegree;
@@ -325,10 +382,12 @@ public class Kakuro {
      * @param constraintValues  A map of currently selected positions with
      *                          their corresponding values
      * @param constraint  The constraint that has a single value left to select
-     * @return  An updated constraint map with the newly selected position to
+     * @return an updated constraint map with the newly selected position to
      * value mapping
      */
-    public static Map<String, Integer> satisfyConstraint(String position, Map<String, Integer> constraintValues, Constraint constraint) {
+    public static Map<String, Integer> satisfyConstraint(String position,
+                                                         Map<String, Integer> constraintValues,
+                                                         Constraint constraint) {
         Map<String, Integer> newConstraintValues = new HashMap<>(constraintValues);
         int currentSum = 0;
 
@@ -364,10 +423,12 @@ public class Kakuro {
      * @param position  The most recently changed position
      * @param constraintMultiMap  A map from position to all constraints that
      *                            involve that position
-     * @return  A boolean for whether the selected value for the new position
+     * @return a boolean for whether the selected value for the new position
      * is in accordance to all constraints that use it
      */
-    public static boolean constraintValuesAreValid(Map<String, Integer> constraintValues, String position, ConstraintMultiMap constraintMultiMap) {
+    public static boolean constraintValuesAreValid(Map<String, Integer> constraintValues,
+                                                   String position,
+                                                   ConstraintMultiMap constraintMultiMap) {
         List<Constraint> constraints = constraintMultiMap.getConstraints(position);
 
         for (Constraint constraint : constraints) {

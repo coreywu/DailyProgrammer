@@ -10,42 +10,36 @@ public class PoetryInAHaystack {
             /*
              * bigramMatrix[_1][_2] is the percentage of times that the second
              * letter follows the first. It is the probability of the second
-             * letter occuring given the first letter has occured.
+             * letter occurring given the first letter has occurred.
              */
             double[][] bigramMatrix = new double[26][26];
 
             /*
-             * A count of the occurance of each letter. Used to calculate the
+             * A count of the occurences of each letter. Used to calculate the
              * bigramMatrix after all 2 letter combinations have been examined.
              */
             int[] letterCounts = new int[26];
 
             String[] splitWords = input.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
 
-//            for (String word : splitWords) {
-//                System.out.println(word);
-//            }
-
+            /*
+             * For each line of text, split the line into individual words,
+             * then count the occurrences of each letter and pair of
+             * letters.
+             */
             for (String word : splitWords) {
-//				char first = word.charAt(0);
                 if (word.length() == 0) {
                     continue;
                 }
                 int firstIndex = word.charAt(0) - 97;
                 letterCounts[firstIndex]++;
                 for (int i = 1; i < word.length(); i++) {
-//					char second = word.charAt(i);
                     int secondIndex = word.charAt(i) - 97;
                     letterCounts[secondIndex]++;
-//					System.out.println("first: " + first + " ascii: " + (first - 97) + " second: " + second + " ascii: " + (second - 97));
                     bigramMatrix[firstIndex][secondIndex]++;
                     firstIndex = secondIndex;
                 }
             }
-
-//            for (int i = 0; i < letterCounts.length; i++) {
-//                System.out.println((char) (i + 97) + " " + letterCounts[i]);
-//            }
 
             for (int i = 0; i < bigramMatrix.length; i++) {
                 if (letterCounts[i] > 0) {
@@ -59,15 +53,6 @@ public class PoetryInAHaystack {
                 }
             }
 
-//            for (int i = 0; i < bigramMatrix.length; i++) {
-//                for (int j = 0; j < bigramMatrix[0].length; j++) {
-////					System.out.print((char)(i + 97) + " " + (char)(j + 97) + " " + bigramMatrix[i][j]);
-//                    System.out.print(bigramMatrix[i][j] + " ");
-//                }
-//                System.out.println();
-//
-//            }
-
             return bigramMatrix;
         }
 
@@ -75,41 +60,27 @@ public class PoetryInAHaystack {
             double[][] bigramMatrix = new double[26][26];
             int[] letterCounts = new int[26];
 
-            System.out.println("working directory: " + System.getProperty("user.dir"));
-
             BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
 
             try {
                 String line = bufferedReader.readLine();
 
-                /*
-                 * For each line of text, split the line into individual words,
-                 * then count the occurrances of each letter and pair of
-                 * letters.
-                 */
                 while (line !=null) {
                     String[] splitWords = line.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
-
-//                    for (String word : splitWords) {
-//                        System.out.println(word);
-//                    }
 
                     /*
                      * Count and tore occurrences of letters in 'letterCounts'
                      * and pairs in 'bigramMatrix'.
                      */
                     for (String word : splitWords) {
-//				char first = word.charAt(0);
                         if (word.length() == 0) {
                             continue;
                         }
                         int firstIndex = word.charAt(0) - 97;
                         letterCounts[firstIndex]++;
                         for (int i = 1; i < word.length(); i++) {
-//					char second = word.charAt(i);
                             int secondIndex = word.charAt(i) - 97;
                             letterCounts[secondIndex]++;
-//					System.out.println("first: " + first + " ascii: " + (first - 97) + " second: " + second + " ascii: " + (second - 97));
                             bigramMatrix[firstIndex][secondIndex]++;
                             firstIndex = secondIndex;
                         }
@@ -122,11 +93,6 @@ public class PoetryInAHaystack {
                 bufferedReader.close();
             }
 
-
-            for (int i = 0; i < letterCounts.length; i++) {
-                System.out.println((char) (i + 97) + " " + letterCounts[i]);
-            }
-
             for (int i = 0; i < bigramMatrix.length; i++) {
                 if (letterCounts[i] > 0) {
                     for (int j = 0; j < bigramMatrix[0].length; j++) {
@@ -139,9 +105,38 @@ public class PoetryInAHaystack {
                 }
             }
 
-            printBigramMatrix(bigramMatrix);
-
             return bigramMatrix;
+        }
+
+        /**
+         * Count and store the occurrences of individual letters in
+         * {@code letterCounts} and pairs of letters in {@code bigramMatrix}
+         *
+         *
+         * @param line
+         * @param bigramMatrix
+         * @param letterCounts
+         */
+        public static void addToBigramMatrix(String line, double[][] bigramMatrix, double[] letterCounts) {
+            String[] splitWords = line.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
+
+            /*
+             * Count and store occurrences of letters in 'letterCounts' and
+             * and pairs in 'bigramMatrix'.
+             */
+            for (String word : splitWords) {
+                if (word.length() == 0) {
+                    continue;
+                }
+                int firstIndex = word.charAt(0) - 97;
+                letterCounts[firstIndex]++;
+                for (int i = 1; i < word.length(); i++) {
+                    int secondIndex = word.charAt(i) - 97;
+                    letterCounts[secondIndex]++;
+                    bigramMatrix[firstIndex][secondIndex]++;
+                    firstIndex = secondIndex;
+                }
+            }
         }
 
         public static void printBigramMatrix(double[][] bigramMatrix) {
@@ -185,34 +180,16 @@ public class PoetryInAHaystack {
 
     }
 
-    public static void main(String[] args) throws IOException {
-//    	String input = "I have seen nothing.";
-
-    	String input = "Horatio says 'tis but our fantasy,"
-    				 + "And will not let belief take hold of him"
-    				 + "Touching this dreaded sight, twice seen of us:"
-    				 + "Therefore I have entreated him along"
-    				 + "With us to watch the minutes of this night;"
-    				 + "That if again this apparition come,"
-    				 + "He may approve our eyes and speak to it."
-    				 ;
-
-        double[][] inputBigram = BigramBuilder.buildBigramFromString(input);
-
+    public static void printEnglishLines() throws IOException {
         double[][] fileBigram = BigramBuilder.buildBigramFromFile("TheOddyseyI-III.txt");
 
-
-        double value1 = Integer.MAX_VALUE;
-        double value2 = Integer.MAX_VALUE;
-        double value3 = Integer.MAX_VALUE;
-        double value4 = Integer.MAX_VALUE;
-        double value5 = Integer.MAX_VALUE;
+        double similarityScore1 = Integer.MAX_VALUE;
+        double similarityScore2 = Integer.MAX_VALUE;
+        double similarityScore3 = Integer.MAX_VALUE;
 
         String line1 = "";
         String line2 = "";
         String line3 = "";
-        String line4 = "";
-        String line5 = "";
 
         BufferedReader bufferedReader = new BufferedReader(new FileReader("challenge.txt"));
 
@@ -221,46 +198,23 @@ public class PoetryInAHaystack {
 
             while (line !=null) {
                 double[][] challengeBigram = BigramBuilder.buildBigramFromString(line);
-//                BigramBuilder.printBigramMatrix(challengeBigram);
-
-//                double similarityScore = BigramBuilder.compareMatrices(fileBigram, challengeBigram);
                 double similarityScore = BigramBuilder.compareMatricesNoZero(fileBigram, challengeBigram);
 
-                if (similarityScore < value1) {
-                    value5 = value4;
-                    value4 = value3;
-                    value3 = value2;
-                    value2 = value1;
-                    value1 = similarityScore;
-                    line5 = line4;
-                    line4 = line3;
+                if (similarityScore < similarityScore1) {
+                    similarityScore3 = similarityScore2;
+                    similarityScore2 = similarityScore1;
+                    similarityScore1 = similarityScore;
                     line3 = line2;
                     line2 = line1;
                     line1 = line;
-                } else if (similarityScore < value2) {
-                    value5 = value4;
-                    value4 = value3;
-                    value3 = value2;
-                    value2 = similarityScore;
-                    line5 = line4;
-                    line4 = line3;
+                } else if (similarityScore < similarityScore2) {
+                    similarityScore3 = similarityScore2;
+                    similarityScore2 = similarityScore;
                     line3 = line2;
                     line2 = line;
-                } else if (similarityScore < value3) {
-                    value5 = value4;
-                    value4 = value3;
-                    value3 = similarityScore;
-                    line5 = line4;
-                    line4 = line3;
+                } else if (similarityScore < similarityScore3) {
+                    similarityScore3 = similarityScore;
                     line3 = line;
-                } else if (similarityScore < value4) {
-                    value5 = value4;
-                    value4 = similarityScore;
-                    line5 = line4;
-                    line4 = line;
-                } else if (similarityScore < value5) {
-                    value5 = similarityScore;
-                    line5 = line;
                 }
 
                 line = bufferedReader.readLine();
@@ -273,8 +227,9 @@ public class PoetryInAHaystack {
         System.out.println(line1);
         System.out.println(line2);
         System.out.println(line3);
-        System.out.println(line4);
-        System.out.println(line5);
     }
 
+    public static void main(String[] args) throws IOException {
+        printEnglishLines();
+    }
 }

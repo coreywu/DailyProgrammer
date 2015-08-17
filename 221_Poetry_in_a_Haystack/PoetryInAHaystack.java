@@ -4,8 +4,20 @@ import java.io.IOException;
 
 public class PoetryInAHaystack {
 
+    /**
+     * BigramBuilder provides methods for generating and displaying a bigram
+     * frequency table. The bigram frequency table is represented as an
+     * adjacency matrix where the indices represent each letter in a pair.
+     */
     public static class BigramBuilder {
 
+        /**
+         * Returns the bigram frequency table generated from a String input.
+         *
+         * @param input  The string to parse to find letter pair frequencies
+         * @return  The bigram frequency table in the form of an adjacency
+         * matrix
+         */
         public static double[][] buildBigramFromString(String input) {
             /*
              * bigramMatrix[_1][_2] is the percentage of times that the second
@@ -20,78 +32,7 @@ public class PoetryInAHaystack {
              */
             int[] letterCounts = new int[26];
 
-            String[] splitWords = input.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
-
-            /*
-             * For each line of text, split the line into individual words,
-             * then count the occurrences of each letter and pair of
-             * letters.
-             */
-            for (String word : splitWords) {
-                if (word.length() == 0) {
-                    continue;
-                }
-                int firstIndex = word.charAt(0) - 97;
-                letterCounts[firstIndex]++;
-                for (int i = 1; i < word.length(); i++) {
-                    int secondIndex = word.charAt(i) - 97;
-                    letterCounts[secondIndex]++;
-                    bigramMatrix[firstIndex][secondIndex]++;
-                    firstIndex = secondIndex;
-                }
-            }
-
-            for (int i = 0; i < bigramMatrix.length; i++) {
-                if (letterCounts[i] > 0) {
-                    for (int j = 0; j < bigramMatrix[0].length; j++) {
-                        bigramMatrix[i][j] = bigramMatrix[i][j] / letterCounts[i];
-                    }
-                } else {
-                    for (int j = 0; j < bigramMatrix[0].length; j++) {
-                        bigramMatrix[i][j] = 0;
-                    }
-                }
-            }
-
-            return bigramMatrix;
-        }
-
-        public static double[][] buildBigramFromFile(String filename) throws IOException {
-            double[][] bigramMatrix = new double[26][26];
-            int[] letterCounts = new int[26];
-
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
-
-            try {
-                String line = bufferedReader.readLine();
-
-                while (line !=null) {
-                    String[] splitWords = line.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
-
-                    /*
-                     * Count and tore occurrences of letters in 'letterCounts'
-                     * and pairs in 'bigramMatrix'.
-                     */
-                    for (String word : splitWords) {
-                        if (word.length() == 0) {
-                            continue;
-                        }
-                        int firstIndex = word.charAt(0) - 97;
-                        letterCounts[firstIndex]++;
-                        for (int i = 1; i < word.length(); i++) {
-                            int secondIndex = word.charAt(i) - 97;
-                            letterCounts[secondIndex]++;
-                            bigramMatrix[firstIndex][secondIndex]++;
-                            firstIndex = secondIndex;
-                        }
-                    }
-
-                    line = bufferedReader.readLine();
-                }
-
-            } finally {
-                bufferedReader.close();
-            }
+            addToBigramMatrix(input, bigramMatrix, letterCounts);
 
             for (int i = 0; i < bigramMatrix.length; i++) {
                 if (letterCounts[i] > 0) {
@@ -109,15 +50,63 @@ public class PoetryInAHaystack {
         }
 
         /**
-         * Count and store the occurrences of individual letters in
-         * {@code letterCounts} and pairs of letters in {@code bigramMatrix}
+         * Returns the bigram frequency table generated from a text file.
          *
-         *
-         * @param line
-         * @param bigramMatrix
-         * @param letterCounts
+         * @param filename  The name of the file to parse
+         * @return  The bigram frequency table in the form of an adjacency
+         * matrix
          */
-        public static void addToBigramMatrix(String line, double[][] bigramMatrix, double[] letterCounts) {
+        public static double[][] buildBigramFromFile(String filename) throws IOException {
+            double[][] bigramMatrix = new double[26][26];
+            int[] letterCounts = new int[26];
+
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
+
+            try {
+                String line = bufferedReader.readLine();
+
+                while (line !=null) {
+                    addToBigramMatrix(line, bigramMatrix, letterCounts);
+                    line = bufferedReader.readLine();
+                }
+
+            } finally {
+                bufferedReader.close();
+            }
+
+            /*
+             * Find the frequency of each bigram by diving the number of pair
+             * occurrences by the number of occurrences of the first letter.
+             * For example, we divide the occurrences of 'ab' by the
+             * occurrences of 'a' by itself. This gives us the probability that
+             * given the letter 'a', we end up with 'b' as the next letter in
+             * the pair.
+             */
+            for (int i = 0; i < bigramMatrix.length; i++) {
+                if (letterCounts[i] > 0) {
+                    for (int j = 0; j < bigramMatrix[0].length; j++) {
+                        bigramMatrix[i][j] = bigramMatrix[i][j] / letterCounts[i];
+                    }
+                } else {
+                    for (int j = 0; j < bigramMatrix[0].length; j++) {
+                        bigramMatrix[i][j] = 0;
+                    }
+                }
+            }
+
+            return bigramMatrix;
+        }
+
+        /**
+         * Count and store the occurrences of individual letters in
+         * {@code letterCounts} and pairs of letters in {@code bigramMatrix}.
+         *
+         * @param line  A string to parse for letters and pairs of letters
+         * @param bigramMatrix  The bigram adjacency matrix to update with new
+         *                      letter pairs
+         * @param letterCounts  The counts of occurrences of each letter
+         */
+        public static void addToBigramMatrix(String line, double[][] bigramMatrix, int[] letterCounts) {
             String[] splitWords = line.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
 
             /*
@@ -151,6 +140,17 @@ public class PoetryInAHaystack {
         public static void printSortedBigramPairs(double[][] bigramMatrix) {
         }
 
+        /**
+         * Find the similarity score between two matrices. This similarity
+         * score is calculated as the total absolute difference between the
+         * corresponding values in each matrix. A lower score indicates more
+         * similarities in values.
+         *
+         * @param matrix1  The first matrix to compare
+         * @param matrix2  The second matrix to compare
+         * @return  the similarity score; the total of all absolute differences
+         * in all corresponding values in each matrix
+         */
         public static double compareMatrices(double[][] matrix1, double[][] matrix2) {
             double totalDifference = 0;
 
@@ -163,6 +163,23 @@ public class PoetryInAHaystack {
             return totalDifference;
         }
 
+        /**
+         * Find the similarity score between two matrices, with one addition:
+         * if the first matrix contains a value that is zero and the second
+         * matrix's corresponding value is not also zero, we return
+         * {@code Double.MAX_VALUE} (the two matrices do not have similar
+         * values).
+         *
+         * This is because letter pairs that were never found in the input are
+         * very likely to be invalid letter pairs. If these letter pairs are
+         * found in the candidate line, it is very likely that the line
+         * contains invalid English words.
+         *
+         * @param matrix1  The first matrix to compare
+         * @param matrix2  The second matrix to compare
+         * @return  the similarity score; the total of all absolute differences
+         * in all corresponding values in each matrix
+         */
         public static double compareMatricesNoZero(double[][] matrix1, double[][] matrix2) {
             double totalDifference = 0;
 
@@ -183,6 +200,7 @@ public class PoetryInAHaystack {
     public static void printEnglishLines() throws IOException {
         double[][] fileBigram = BigramBuilder.buildBigramFromFile("TheOddyseyI-III.txt");
 
+        /* Keep track of the 3 most similar lines to our sample */
         double similarityScore1 = Integer.MAX_VALUE;
         double similarityScore2 = Integer.MAX_VALUE;
         double similarityScore3 = Integer.MAX_VALUE;
@@ -198,6 +216,13 @@ public class PoetryInAHaystack {
 
             while (line !=null) {
                 double[][] challengeBigram = BigramBuilder.buildBigramFromString(line);
+                /*
+                 * `compareMatrices` by itself did not find the third valid
+                 * line correctly, so `compareMatricesNoZero` is used instead.
+                 * This eliminates lines that correspond very well to our
+                 * sample but contain letter pairs that do not exist in our
+                 * sample.
+                 */
                 double similarityScore = BigramBuilder.compareMatricesNoZero(fileBigram, challengeBigram);
 
                 if (similarityScore < similarityScore1) {

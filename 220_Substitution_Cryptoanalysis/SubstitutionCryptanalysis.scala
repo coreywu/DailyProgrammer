@@ -6,6 +6,7 @@ object SubstitutionCryptanalysis {
   
   class Dictionary() {
     var dictionary: HashMap[String, Set[String]] = HashMap()
+    var patternCount: HashMap[String, Int] = HashMap()
     
     def addWordLetterPattern(word: String) = {
       addWord(convertToLetterPattern(word), word)
@@ -25,12 +26,13 @@ object SubstitutionCryptanalysis {
 
     def addWord(key: String, value: String) = {
       if (dictionary.contains(key)) {
-        dictionary = dictionary + ((key, dictionary(key) + (value)))
+        dictionary = dictionary + (key -> (dictionary(key) + (value)))
+        patternCount = patternCount + (key -> (patternCount(key) + 1))
       } else {
-        dictionary = dictionary + ((key, Set(value)))
+        dictionary = dictionary + (key -> Set(value))
+        patternCount = patternCount + (key -> 1)
       }
     }
-
     
   }
 
@@ -42,18 +44,45 @@ object SubstitutionCryptanalysis {
         dictionary.addWordLetterPattern(word)
     }
     
-    println(dictionary.dictionary)
+    println(dictionary.dictionary.take(10))
+    println(dictionary.patternCount.take(10))
     
-    println(dictionary.convertToLetterPattern("aadvark"))
-      
     val input = """IAL FTNHPL PDDI DR RDNP WF IUD
                   |2
                   |aH
                   |oD""".stripMargin
       
     val splitInput = input.split("\n")
+    
+    val encodedWords = splitInput.head.split(" ")
+    val letterPatternWords: Array[String] = encodedWords.map(word => dictionary.convertToLetterPattern(word.toLowerCase()))
+    val encodedToPattern: Map[String, String] = encodedWords.zip(letterPatternWords).toMap
+//    .map{ case (k,v) => (k -> v) }
+    val sortedLetterPatternWords = letterPatternWords.sortBy(word => dictionary.patternCount(word))
 
-    splitInput.foreach(println)
+    println("Encoded to Pattern Words 1")
+    encodedToPattern.foreach(println)
+    
+//    println("Letter Pattern Words 1")
+//    letterPatternWords.foreach(println)
+//    
+//    println("Letter Pattern Words 2")
+//    sortedLetterPatternWords.foreach(println)
+//
+//    println("Letter Pattern Words Values 1")
+//    letterPatternWords.map(word => (word, dictionary.patternCount(word))).foreach(println)
+//
+//    println("Letter Pattern Words Values 2")
+//    sortedLetterPatternWords.map(word => (word, dictionary.patternCount(word))).foreach(println)
+    
+//    for (word: String <- dictionary.dictionary(sortedLetterPatternWords.head)) {
+//      if (word.contains)
+//    }
+    
+    var substitutes: HashMap[Char, Char] = HashMap()
+    splitInput.drop(2).foreach(pair => substitutes += (pair.charAt(0).toUpper -> pair.charAt(1)))
+    
+    println(substitutes)
       
   }
 }

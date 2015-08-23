@@ -15,7 +15,8 @@ object SubstitutionCryptanalysis {
     def convertToLetterPattern(word: String) = {
       var newWord = word
       var currentLetter = 'A'
-      for (letter <- word) {
+      for (i <- 0 until word.length()) {
+        val letter = newWord.charAt(i)
         if (letter.isLower) {
           newWord = newWord.replace(letter, currentLetter)
           currentLetter = (currentLetter.toInt + 1).toChar
@@ -55,7 +56,9 @@ object SubstitutionCryptanalysis {
     val splitInput = input.split("\n")
     
     val encodedWords = splitInput.head.split(" ")
-    val letterPatternWords: Array[String] = encodedWords.map(word => dictionary.convertToLetterPattern(word.toLowerCase()))
+    val letterPatternWords: Array[String] = encodedWords.map(word 
+        => dictionary.convertToLetterPattern(word.toLowerCase()))
+        
     val encodedToPattern: Map[String, String] = encodedWords.zip(letterPatternWords).toMap
 //    .map{ case (k,v) => (k -> v) }
     val sortedLetterPatternWords = letterPatternWords.sortBy(word => dictionary.patternCount(word))
@@ -78,11 +81,46 @@ object SubstitutionCryptanalysis {
 //    for (word: String <- dictionary.dictionary(sortedLetterPatternWords.head)) {
 //      if (word.contains)
 //    }
+
+    var substitutions: HashMap[Char, Char] = HashMap()
+    splitInput.drop(2).foreach(pair => substitutions += (pair.charAt(0).toUpper -> pair.charAt(1)))
     
-    var substitutes: HashMap[Char, Char] = HashMap()
-    splitInput.drop(2).foreach(pair => substitutes += (pair.charAt(0).toUpper -> pair.charAt(1)))
+    println("Substitutions: " + substitutions)
+
+    var possibleSubstitutions: HashMap[Char, Set[Char]] = HashMap()
     
-    println(substitutes)
-      
+    for (encodedWord: String <- encodedWords) {
+      var candidateSubstitutions: HashMap[Char, Set[Char]] = HashMap()
+      for (possibleWord: String <- dictionary.dictionary(encodedToPattern(encodedWord))) {
+        for (i <- 0 until possibleWord.length()) {
+          val encodedLetter = encodedWord.charAt(i)
+          if (!substitutions.contains(encodedLetter)) {
+        	  val possibleLetter = possibleWord.charAt(i).toUpper
+        		if (!candidateSubstitutions.contains(encodedLetter)) {
+        		  candidateSubstitutions += encodedLetter -> Set(possibleLetter)
+        	  } else {
+        		  candidateSubstitutions += encodedLetter ->
+        			  (candidateSubstitutions(encodedLetter) + possibleLetter)
+        		}
+          }
+        }
+      }
+      if (possibleSubstitutions.isEmpty) {
+    	  possibleSubstitutions ++= candidateSubstitutions
+      } else {
+    	  for (letter: Char <- candidateSubstitutions.keys) {
+    		  if (possibleSubstitutions.contains(letter)) {
+    			  val newPossibleSubstitutionsForLetter: Set[Char] = 
+                possibleSubstitutions(letter) & candidateSubstitutions(letter)
+            possibleSubstitutions += letter -> newPossibleSubstitutionsForLetter
+    		  } else {
+            possibleSubstitutions += letter -> candidateSubstitutions(letter) 
+          }
+    	  }
+      }
+    }
+    
+    println("Possible Substitutions: " + possibleSubstitutions)
+    
   }
 }

@@ -1,6 +1,8 @@
 import scala.io.Source
 import scala.collection.immutable.HashMap
 import scala.collection.immutable.Set
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Buffer
 
 object SubstitutionCryptanalysis {
   
@@ -37,23 +39,29 @@ object SubstitutionCryptanalysis {
     
   }
   
-  def findSubstitutionEncoding(input: String): Unit = {
+  def findSubstitutionEncoding(input: String): Option[Map[Char, Char]] = {
     val filename = "src/resources/words.txt"
     val dictionary = buildEncodingDictionary(filename)
     
-    println(dictionary.dictionary.take(10))
-    println(dictionary.patternCount.take(10))
+    println("Dictionary: " + dictionary.dictionary.take(10))
+    println("Dictionary AB: " + dictionary.dictionary("AB"))
+    println("Dictionary pattern count: " + dictionary.patternCount.take(10))
 
     val splitInput = input.split("\n")
     
-    val encodedWords = splitInput.head.split(" ")
-    val letterPatternWords: Array[String] = encodedWords.map {
+    val encodedWords: Buffer[String] = splitInput.head.split(" ").toBuffer
+    val letterPatternWords: Buffer[String] = encodedWords.map {
         word => dictionary.convertToLetterPattern(word.toLowerCase())
     }
         
     // Map of encoded words (original) to patterns (alphabetical patterns)
-    val encodedToPattern: Map[String, String] = encodedWords.zip(letterPatternWords).toMap
-    val sortedLetterPatternWords = letterPatternWords.sortBy(word => dictionary.patternCount(word))
+    val encodedToPattern: Buffer[(String, String)] = encodedWords.zip(letterPatternWords)
+//    val encodedToPattern: Map[String, String] = encodedWords.zip(letterPatternWords).toMap
+//    val patternToEncoded: Map[String, String] = letterPatternWords.zip(encodedWords).toMap
+    val sortedLetterPatternWords: Buffer[String] = letterPatternWords.sortBy(word => dictionary.patternCount(word))
+
+    println("Encoded Words:")
+    encodedWords.foreach(println)
 
     println("Encoded to Pattern Words 1")
     encodedToPattern.foreach(println)
@@ -79,21 +87,28 @@ object SubstitutionCryptanalysis {
     splitInput.drop(2).foreach(pair => substitutions += (pair.charAt(0).toUpper -> pair.charAt(1)))
     
     println("Substitutions: " + substitutions)
-
+    
+    recursiveSubstitutionEncoding(substitutions, encodedWords, encodedToPattern, sortedLetterPatternWords, dictionary)
   }
 
-  def recursiveSubstitutionEncoding(substitutions: Map[Char, Char], encodedWords: Array[String], 
-      encodedToPattern: Map[String, String], sortedLetterPatternWords: Array[String], 
-      dictionary: Dictionary): Option[Map[Char, Char]] = {
+  def recursiveSubstitutionEncoding(substitutions: Map[Char, Char], encodedWords: Buffer[String], 
+      encodedToPattern: Buffer[(String, String)],
+      sortedLetterPatternWords: Buffer[String], dictionary: Dictionary): Option[Map[Char, Char]] = {
     
     if (encodedWords.length == 0) return Some(substitutions)
 
     // Find all possible letter substitutions given the set of encoded words
     var possibleSubstitutions: Map[Char, Set[Char]] = HashMap()
     
+    println("Encoded Words 2:")
+    encodedWords.foreach(println)
+
+    println("Dictionary 2: " + dictionary.dictionary.take(10) + " " + dictionary.dictionary("AB"))
     for (encodedWord: String <- encodedWords) {
+      println("Encoded Word: " + encodedWord)
+      println("Encoded to Pattern: " + getPattern(encodedToPattern, encodedWord))
       var candidateSubstitutions: Map[Char, Set[Char]] = HashMap()
-      for (possibleWord: String <- dictionary.dictionary(encodedToPattern(encodedWord))) {
+      for (possibleWord: String <- dictionary.dictionary(getPattern(encodedToPattern, encodedWord))) {
         for (i <- 0 until possibleWord.length()) {
           val encodedLetter = encodedWord.charAt(i)
           if (!substitutions.contains(encodedLetter)) {
@@ -133,27 +148,41 @@ object SubstitutionCryptanalysis {
       // substitutions given our set of encoded words.
       var valid = true
       for (i <- 0 until firstWordToSubstitute.length()) {
-        val encodedLetter = firstWordToSubstitute.charAt(i)
-        val possibleLetter = possibleWord.charAt(i)
-        if (!possibleSubstitutions(encodedLetter).contains(possibleLetter)) {
+        println("Encoded to Pattern" + encodedToPattern)
+        val encodedLetter = getEncoded(encodedToPattern, firstWordToSubstitute).charAt(i)
+        val patternLetter = firstWordToSubstitute.charAt(i)
+        val possibleLetter = possibleWord.charAt(i).toUpper
+        println("Substitutions: " + substitutions)
+        println("Possible word: " + possibleWord + " encodedword: " + getEncoded(encodedToPattern, firstWordToSubstitute))
+//        if (!possibleSubstitutions.contains(encodedLetter) 
+//            || !possibleSubstitutions(encodedLetter).contains(possibleLetter)) {
+        if (!substitutions.contains(encodedLetter) && !possibleSubstitutions(encodedLetter).contains(possibleLetter)) {
           valid = false   
         }
       }
+      println("PossibleWord: " + possibleWord + " " + valid)
       if (valid) {
         // Add all letter substitutions to our substitution map and recurse
         // down.
     	  var newSubstitutions: Map[Char, Char] = HashMap() ++ substitutions
         for (i <- 0 until firstWordToSubstitute.length()) {
-        	val encodedLetter = firstWordToSubstitute.charAt(i)
+        	val encodedLetter = getEncoded(encodedToPattern, firstWordToSubstitute).charAt(i)
         	val possibleLetter = possibleWord.charAt(i)
           newSubstitutions += encodedLetter -> possibleLetter
         }
         
-        val newEncodedWords = sortedLetterPatternWords.tail
-        val newEncodedToPattern = encodedToPattern - firstWordToSubstitute
-        val newSortedLetterPatternWords = sortedLetterPatternWords.tail
+        val substitutedEncodedWord = getEncoded(encodedToPattern, firstWordToSubstitute)
+        val substitutedPatternWord = firstWordToSubstitute
+        
+        val newEncodedWords: Buffer[String] = encodedWords - substitutedEncodedWord
+        val newEncodedToPattern: Buffer[(String, String)] = encodedToPattern - ((substitutedEncodedWord, substitutedPatternWord))
+        println("Encoded: " + encodedWords + " new: " + newEncodedWords)
+        val newSortedLetterPatternWords: Buffer[String] = sortedLetterPatternWords.tail
 
-        return recursiveSubstitutionEncoding(newSubstitutions, newEncodedWords, newEncodedToPattern, newSortedLetterPatternWords, dictionary)
+        val result = recursiveSubstitutionEncoding(newSubstitutions, newEncodedWords, newEncodedToPattern, newSortedLetterPatternWords, dictionary)
+        if (result.isDefined) {
+          return result
+        }
       }
     }
     
@@ -166,6 +195,14 @@ object SubstitutionCryptanalysis {
         dictionary.addWordLetterPattern(word)
     }
     dictionary
+  }
+  
+  def getPattern(encodedToPattern: Buffer[(String, String)], encodedWord: String): String = {
+    encodedToPattern.find{_._1.equals(encodedWord)}.get._2
+  }
+
+  def getEncoded(encodedToPattern: Buffer[(String, String)], patternWord: String): String = {
+    encodedToPattern.find{_._2.equals(patternWord)}.get._1
   }
 
   def main(args: Array[String]) {

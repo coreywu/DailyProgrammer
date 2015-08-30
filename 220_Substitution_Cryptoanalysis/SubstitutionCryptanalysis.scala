@@ -39,7 +39,7 @@ object SubstitutionCryptanalysis {
     
   }
   
-  def findSubstitutionEncoding(input: String): Option[Map[Char, Char]] = {
+  def findSubstitutionEncoding(input: String): Unit = {
     val filename = "src/resources/words.txt"
     val dictionary = buildEncodingDictionary(filename)
     
@@ -64,16 +64,27 @@ object SubstitutionCryptanalysis {
     var substitutions: Map[Char, Char] = HashMap()
     splitInput.drop(2).foreach(pair => substitutions += (pair.charAt(1) -> pair.charAt(0).toUpper))
     
-    println("Substitutions: " + substitutions)
+//    println("Substitutions: " + substitutions)
     
-    recursiveSubstitutionEncoding(substitutions, encodedWords, encodedToPattern, sortedLetterPatternWords, dictionary)
+    val result: Buffer[Map[Char, Char]] = recursiveSubstitutionEncoding(substitutions, encodedToPattern, sortedLetterPatternWords, dictionary)
+    
+    if (result.size > 0) {
+      println("No encoding can be found")
+    } else {
+    	// Format output of result(s)
+      val substitutionsBuffer = result
+    	println(encodedWords.map(word => word.map(letter => substitutions(letter))).mkString(" "));
+    }
+
   }
 
-  def recursiveSubstitutionEncoding(substitutions: Map[Char, Char], encodedWords: Buffer[String], 
+  def recursiveSubstitutionEncoding(substitutions: Map[Char, Char], 
       encodedToPattern: Buffer[(String, String)], sortedLetterPatternWords: Buffer[String], 
-      dictionary: Dictionary): Option[Map[Char, Char]] = {
+      dictionary: Dictionary): Buffer[Map[Char, Char]] = {
     
-    if (encodedWords.length == 0) return Some(substitutions)
+    if (encodedToPattern.length == 0) return Buffer(substitutions)
+    
+    var resultBuffer: Buffer[Map[Char, Char]] = Buffer()
 
     val usedLetters: Set[Char] = substitutions.values.toSet
     
@@ -83,7 +94,7 @@ object SubstitutionCryptanalysis {
 //    println("Encoded Words 2:")
 //    encodedWords.foreach(println)
 
-    for (encodedWord: String <- encodedWords) {
+    for (encodedWord: String <- encodedToPattern.map(tuple => tuple._1)) {
 //      println("Encoded Word: " + encodedWord)
 //      println("Encoded to Pattern: " + getPattern(encodedToPattern, encodedWord))
       var candidateSubstitutions: Map[Char, Set[Char]] = HashMap()
@@ -153,19 +164,19 @@ object SubstitutionCryptanalysis {
         val substitutedEncodedWord = getEncoded(encodedToPattern, firstWordToSubstitute)
         val substitutedPatternWord = firstWordToSubstitute
         
-        val newEncodedWords: Buffer[String] = encodedWords - substitutedEncodedWord
+//        val newEncodedWords: Buffer[String] = encodedWords - substitutedEncodedWord
         val newEncodedToPattern: Buffer[(String, String)] = encodedToPattern - ((substitutedEncodedWord, substitutedPatternWord))
 //        println("Encoded: " + encodedWords + " new: " + newEncodedWords)
         val newSortedLetterPatternWords: Buffer[String] = sortedLetterPatternWords.tail
 
-        val result = recursiveSubstitutionEncoding(newSubstitutions, newEncodedWords, newEncodedToPattern, newSortedLetterPatternWords, dictionary)
-        if (result.isDefined) {
-          return result
+        val result = recursiveSubstitutionEncoding(newSubstitutions, newEncodedToPattern, newSortedLetterPatternWords, dictionary)
+        if (result.size > 0) {
+          return resultBuffer ++= result
         }
       }
     }
     
-    None
+    Buffer()
   }
 
   def buildEncodingDictionary(filename: String): Dictionary = {
@@ -211,10 +222,10 @@ object SubstitutionCryptanalysis {
                    |1
                    |sX""".stripMargin
     
-    println("Result 1: " + findSubstitutionEncoding(input1))
-//    println("Result 2: " + findSubstitutionEncoding(input2))
-    println("Result 3: " + findSubstitutionEncoding(input3))
-//    println("Result 4: " + findSubstitutionEncoding(input4))
-    println("Result 5: " + findSubstitutionEncoding(input5))
+    findSubstitutionEncoding(input1)
+//  findSubstitutionEncoding(input2)
+//    findSubstitutionEncoding(input3)
+//  findSubstitutionEncoding(input4)
+//    findSubstitutionEncoding(input5)
   }
 }

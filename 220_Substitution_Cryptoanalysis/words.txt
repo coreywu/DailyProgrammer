@@ -1,3 +1,4 @@
+a
 aardvark
 aardwolf
 aaron
@@ -7012,7 +7013,7 @@ canopied
 canopies
 canopy
 cans
-cant
+can't
 cantaloupe
 cantankerous
 cantata
@@ -15238,7 +15239,7 @@ donning
 donor
 donors
 dons
-dont
+don't
 donut
 doodle
 doodled
@@ -23391,7 +23392,7 @@ hashed
 hashes
 hashing
 hashish
-hasnt
+hasn't
 hasp
 hassle
 haste
@@ -24964,6 +24965,7 @@ hysteric
 hysterical
 hysterically
 hysterics
+i
 iambic
 iambus
 iatrogenic
@@ -27546,7 +27548,7 @@ isles
 islet
 islets
 isms
-isnt
+isn't
 isobar
 isobars
 isogram
@@ -27630,7 +27632,7 @@ itinerants
 itineraries
 itinerary
 itll
-its
+it's
 itself
 ive
 ivies
@@ -58003,6 +58005,7 @@ youngish
 youngster
 youngsters
 your
+you're
 yours
 yourself
 yourselves
@@ -58010,6 +58013,7 @@ youth
 youthful
 youthfulness
 youths
+you've
 yowl
 yoyo
 yrs

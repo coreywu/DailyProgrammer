@@ -118,6 +118,21 @@ current_nearest_node = None
 current_nearest_distance = float("inf")
 
 def find_nearest_neighbour(node, kdTree):
+    """Find the nearest neighbour node to a coordinate in a k-d tree. We keep
+    track of the current nearest node while we recursively check sub-trees for
+    better nodes. We always check the sub-tree in the direction of the desired
+    coordinate (if we are looking for (0.5, 0.5), we would always check the 
+    sub-tree left of (0.6, 0.4) if the cut direction is x). 
+    
+    The other sub-tree is checked if the node is closer than the current best 
+    distance on that cutting axis. For example, if the current best distance is
+    0.2 and we are looking for (0.5, 0.5), we will check the right sub-tree of 
+    (0.6, 0.4) because the difference of 0.6 and 0.5 is less than the best
+    known distance. This is done because there could be a point at (0.6, 0.5)
+    in that sub-tree, which is better than the current nearest distance and is
+    a potential candidate for nearest neighbour.
+    """
+
     global current_nearest_node
     global current_nearest_distance
 

@@ -1,24 +1,28 @@
-import string
-import Queue
-
 MALE = False
 FEMALE = True
 
-def gale_shapely(filename):
+def gale_shapley(filename):
+    """Apply the Gale-Shapley algorithm to find a stable marriage for a list
+    of male and female match preferences. The algorithm involves "rounds" of
+    each unmarried male proposing to his most prefered female and each female 
+    selecting her preference from her suitors."""
+
     male_preferences, female_preferences = get_preferences_from_file(filename)
 
     available_males_set = set(male_preferences.keys())
     available_females_set = set(female_preferences.keys())
 
+    # marriages stores the current matches we have performed
     marriages = {}
 
     while available_males_set:
+        # Keep a dict of sets of suitors which propose to each female
         suitors = {}
         for female in available_females_set:
             suitors[female] = set()
 
-        males_to_remove = set()
         for male in available_males_set:
+            # For each male, propose to his most preferred female
             proposed = False
             while not proposed:
                 potential_female = male_preferences[male][-1]
@@ -27,27 +31,17 @@ def gale_shapely(filename):
                 else:
                     male_preferences[male].pop()
 
-            if female_preferences[potential_female][-1] == male:
-                marriages[male] = potential_female
-                males_to_remove.add(male)
-                available_females_set.remove(potential_female)
+            suitors[potential_female].add(male)
 
-                for female_preference in female_preferences:
-                    female_preferences[female_preference].remove(male)
-
-                for male_preference in male_preferences:
-                    male_preferences[male_preference].remove(potential_female)
-
-            else:
-                suitors[potential_female].add(male)
-
+        # Each female now selects her most preferred male from her suitors
         for female in suitors:
-            if female not in available_females_set:
-                break
             for male in female_preferences[female]:
-                if male in suitors[female] and male not in males_to_remove:
+                if male in suitors[female]:
                     marriages[male] = female
-                    males_to_remove.add(male)
+
+                    # Once a match is made, remove each person from their 
+                    # availability sets and preference lists
+                    available_males_set.remove(male)
                     available_females_set.remove(female)
 
                     for female_preference in female_preferences:
@@ -57,8 +51,6 @@ def gale_shapely(filename):
                         male_preferences[male_preference].remove(female)
 
                     break
-
-        available_males_set = available_males_set.difference(males_to_remove)
 
     print marriages
 
@@ -93,6 +85,6 @@ def get_preferences_from_file(filename):
 
     return male_preferences, female_preferences
 
-gale_shapely("input1.txt")
-gale_shapely("input2.txt")
+gale_shapley("input1.txt")
+gale_shapley("input2.txt")
 

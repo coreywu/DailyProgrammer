@@ -1,5 +1,4 @@
 import math
-import Queue
 
 class KDTree(object):
     """A class which holds information for a single node in a k-d tree. The 

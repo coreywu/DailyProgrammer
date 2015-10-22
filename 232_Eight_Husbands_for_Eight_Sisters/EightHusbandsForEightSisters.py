@@ -85,6 +85,6 @@ def get_preferences_from_file(filename):
 
     return male_preferences, female_preferences
 
+
 gale_shapley("input1.txt")
 gale_shapley("input2.txt")
-

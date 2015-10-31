@@ -1,9 +1,15 @@
 class Trie(object):
-    
+    """The trie class represents a substring of a valid word by storing an 
+    array of children Tries. Each Trie itself is a single letter except the 
+    root Trie which points to all words.
+    """
     def __init__(self):
         self.children = [None] * 26
 
     def insert(self, word):
+        """Insert a word into the Trie recursively, creating new Tries 
+        whenever necessary.
+        """
         word = word.strip().lower()
         self.__insert(word)
 
@@ -20,6 +26,8 @@ class Trie(object):
             self.children[index].__insert(word[1:])
 
     def contains(self, word):
+        """Returns whether a word exists within a Trie.
+        """
         word = word.strip().lower()
         return self.__contains(word)
 
@@ -34,6 +42,9 @@ class Trie(object):
             return self.children[index].__contains(word[1:])
 
     def get_first_error(self, word):
+        """Returns the position of the first letter which is not contained
+        within the Trie.
+        """
         return self.__get_first_error_recursive(word, 0)
 
     def __get_first_error_recursive(self, word, n):
@@ -48,11 +59,11 @@ class Trie(object):
             return self.children[index].__get_first_error_recursive(word[1:], n + 1)
 
     def build_from_file(self, filename):
+        """Build the Trie from words in a file.
+        """
         with open(filename) as f:
             line = " "
             while len(line) > 0:
-                if "zyzzyvas" == line:
-                    print "word here"
                 line = f.readline()
                 self.insert(line)
     

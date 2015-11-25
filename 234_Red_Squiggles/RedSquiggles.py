@@ -105,7 +105,7 @@ challenge_input13 = "parogative"
 challenge_input14 = "suparseed"
 
 trie = Trie()
-trie.build_from_file("enable1.txt")
+trie.build_from_file("../util/enable1.txt")
 
 print format_first_error(input1, trie.get_first_error(input1))
 print format_first_error(input2, trie.get_first_error(input2))

@@ -1,3 +1,72 @@
+from sets import Set
+
+class Trie(object):
+    """The trie class represents a substring of a valid word by storing an 
+    array of children Tries. Each Trie itself is a single letter except the 
+    root Trie which points to all words.
+    """
+    def __init__(self):
+        self.children = [None] * 26
+
+    def insert(self, word):
+        """Insert a word into the Trie recursively, creating new Tries 
+        whenever necessary.
+        """
+        word = word.strip().lower()
+        self.__insert(word)
+
+    def __insert(self, word):
+        if not word:
+            return
+        char = word[0]
+        index = ord(char) - 97
+        if self.children[index] is None:
+            new_trie = Trie()
+            new_trie.__insert(word[1:])
+            self.children[index] = new_trie 
+        else:
+            self.children[index].__insert(word[1:])
+
+    def contains(self, word):
+        """Returns whether a word exists within a Trie.
+        """
+        word = word.strip().lower()
+        return self.__contains(word)
+
+    def __contains(self, word):
+        if not word:
+            return True
+        char = word[0]
+        index = ord(char) - 97
+        if self.children[index] is None:
+            return False
+        else:
+            return self.children[index].__contains(word[1:])
+
+    def build_from_file(self, filename):
+        """Build the Trie from words in a file.
+        """
+        with open(filename) as f:
+            line = " "
+            while len(line) > 0:
+                line = f.readline()
+                self.insert(line)
+    
+    def __repr__(self):
+        string = "["
+        for i in range(26):
+            child = self.children[i]
+            string += chr(i + 97) + " : "
+            if child is None:
+                string += "None"
+            else:
+                string += str(child)
+            string += ", "
+
+        string += "]"
+
+        return string
+
 def ternary_to_decimal(ternary):
     result = 0
     power = 0
@@ -60,23 +129,52 @@ def decode_recursive(encoded, current_list):
         else:
             return result1 + result2 if result2 is not None else result1
 
-print encode(10121)
-print
-print 1343814725227 in encode(1102210212110201020210202)
-#print
+def decode_word(encoded_word):
+    decoded_words = decode(encoded_word)
+    valid_decodings = Set()
+    for decoded_word in decoded_words:
+        split_letters = split_decoded_word_recursive(str(decoded_word), "")
+        if split_letters:
+            valid_decodings.update(split_letters)
+            #print split_letters
+    return valid_decodings
 
-print "262 -> a", decode(262)
+def split_decoded_word_recursive(decoded, letters):
+    global trie
+    if len(decoded) == 0:
+        return [letters]
 
-print
-print
-print "11022 to decimal", ternary_to_decimal(11022)
-print "10212 to decimal", ternary_to_decimal(10212)
-print "11020 to decimal", ternary_to_decimal(11020)
-print "10202 to decimal", ternary_to_decimal(10202)
+    valid_splits = []
 
-print
-print
-print "116 to ternary", decimal_to_ternary(116)
-print "104 to ternary", decimal_to_ternary(104)
-print "114 to ternary", decimal_to_ternary(114)
-print "101 to ternary", decimal_to_ternary(101)
+    if decoded[:4] in ternary_letters:
+        char = chr(ternary_to_decimal(decoded[:4])).lower()
+        letters += char
+        if trie.contains(letters):
+            split_letters = split_decoded_word_recursive(decoded[5:], letters)
+            if split_letters:
+                valid_splits.extend(split_letters)
+
+    if decoded[:5] in ternary_letters:
+        char = chr(ternary_to_decimal(decoded[:5])).lower()
+        letters += char
+        if trie.contains(letters):
+            split_letters = split_decoded_word_recursive(decoded[5:], letters)
+            if split_letters:
+                valid_splits.extend(split_letters)
+
+    return valid_splits if len(valid_splits) > 0 else None
+
+# Create dict of ternary values to letters
+ternary_letters = {}
+for i in range(65, 91):
+    ternary_letters[decimal_to_ternary(i)] = chr(i)
+
+for i in range(97, 123):
+    ternary_letters[decimal_to_ternary(i)] = chr(i)
+
+trie = Trie()
+trie.build_from_file("../util/enable1.txt")
+
+print decode_word(1343814725227)
+print decode_word(66364005622431677379166556)
+print decode_word(1023141284209081472421723187973153755941662449)

@@ -136,7 +136,6 @@ def decode_word(encoded_word):
         split_letters = split_decoded_word_recursive(str(decoded_word), "")
         if split_letters:
             valid_decodings.update(split_letters)
-            #print split_letters
     return valid_decodings
 
 def split_decoded_word_recursive(decoded, letters):

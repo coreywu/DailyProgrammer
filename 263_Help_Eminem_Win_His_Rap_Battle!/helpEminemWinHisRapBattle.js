@@ -25,25 +25,92 @@ var dict = "A  AH0\n" +
            "SOLUTION  S AH0 L UW1 SH AH0 N\n" +
            "ZURKUHLEN   Z ER0 K Y UW1 L AH0 N";
 
-function buildRhymeEndDict(dictString) {
+function buildPhonemeDict(dictString) {
     var phonemeStrings = dictString.split("\n");
-    console.log(phonemeStrings);
+    var phonemeDict = new Map();
     for (var i = 0; i < phonemeStrings.length; i++) {
         var phonemeString = phonemeStrings[i];
         var [word, ...phonemes] = phonemeString.split(" ");
-        phonemes = phonemes.filter(function(obj) { return obj != "" })
-        console.log(word)
-        console.log(phonemes)
+        phonemes = phonemes.filter( phoneme => phoneme != "" );
+
+        phonemeDict.set(word, phonemes);
     }
+    console.log(phonemeDict);
+    return phonemeDict;
 }
-rhymeDict = buildRhymeEndDict(dict);
+
+function buildRhymeEndDict(dictString) {
+    var phonemeStrings = dictString.split("\n");
+    var rhymeDict = new Map();
+    for (var i = 0; i < phonemeStrings.length; i++) {
+        var phonemeString = phonemeStrings[i];
+        var [word, ...phonemes] = phonemeString.split(" ");
+        phonemes = phonemes.filter( phoneme => phoneme != "" );
+        var rhymeEnding = findRhymeEnding(phonemes);
+
+        if (rhymeDict.has(rhymeEnding)) {
+            var set = rhymeDict.get(rhymeEnding);
+            set.add({ "word": word, "phonemes": phonemes });
+        } else {
+            rhymeDict.set(rhymeEnding, new Set([{ "word": word, "phonemes": phonemes }]));
+        }
+    }
+    console.log(rhymeDict);
+    return rhymeDict;
+}
 
 var vowels = ["AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH", "IY", "OW", "OY", "UH", "UW", "W", "Y"];
 
+/* Returns the last vowel sound and the phonemes after that sound for a given list of phonemes */
+function findRhymeEnding(phonemesArg) {
+    let phonemes = new Array(...phonemesArg)
+    return phonemes.slice(0, phonemes.reverse().findIndex(
+        phoneme => vowels.indexOf(splitStressIndicator(phoneme)[0]) != -1 
+    ) + 1).reverse().reduce( (prev, curr) => prev + curr );
+}
+
+/* Returns the phoneme separated with the stress indicator number */
+function splitStressIndicator(phoneme) {
+    for (var i = 1; i < phoneme.length; i++) {
+        if (!Number.isNaN(phoneme.charAt(i))) {
+            return [phoneme.slice(0, i + 1), phoneme.slice(i + 1)];
+        }
+    }
+    return [phoneme, ""];
+}
+
+/* Returns the number of matching phonemes in a rhyming pair and a list of those phonemes */
+function matchingEndings(phonemesArg1, phonemesArg2) {
+    let phonemes1 = new Array(...phonemesArg1).reverse();
+    let phonemes2 = new Array(...phonemesArg2).reverse();
+
+    for (var i = 0; i < Math.min(phonemes1.length, phonemes2.length); i++) {
+        if (phonemes1[i] != phonemes2[i]) {
+            return [i, phonemes1.splice(0, i).reverse()];
+        }
+    }
+
+    if (phonemes1.length < phonemes2.length) {
+        return [phonemes1.length, phonemes1.reverse()];
+    } else {
+        return [phonemes2.length, phonemes2.reverse()];
+    }
+}
+
+var phonemeDict = buildPhonemeDict(dict);
+var rhymeDict = buildRhymeEndDict(dict);
 var input = "solution";
 
-console.log(dict);
+let inputPhonemes = phonemeDict.get(input.toUpperCase());
 
-function findRhymeEnd(word) {
-    
+inputEnding = findRhymeEnding(inputPhonemes);
+if (rhymeDict.has(inputEnding)) {
+    rhymeList = [];
+    var set = rhymeDict.get(inputEnding);
+    for (let item of set) {
+        let matches = matchingEndings(inputPhonemes, item["phonemes"]);
+        console.log("Matches: " + matches[0] + " : " + matches[1]);
+        rhymeList.push(matches);
+    }
+    rhymeList.sort( (match1, match2) => match1[0] < match2[0] );
 }

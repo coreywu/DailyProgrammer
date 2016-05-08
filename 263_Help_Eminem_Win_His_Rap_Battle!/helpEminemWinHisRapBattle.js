@@ -28,6 +28,14 @@ var dict = "A  AH0\n" +
 $(document).ready(function() {
     $("#cmudict").load(function() {
         let cmudict = window.frames[0].document.body.innerHTML;
+
+        /*
+        let phonemeDict = buildPhonemeDict(cmudict);
+        let phonemeDictCode = compilePhonemeDictCode(phonemeDict);
+        console.log(phonemeDictCode);
+        */
+
+        let rhymeDict = buildRhymeEndDict(cmudict);
     });
 });
 
@@ -45,12 +53,39 @@ function buildPhonemeDict(dictString) {
     return phonemeDict;
 }
 
+function compilePhonemeDictCode(phonemeDict) {
+    var code = "let phonemeDict = {";
+    let entries = Array.from(phonemeDict.entries());
+    for (var i = 0; i < entries.length; i++) {
+        let word = entries[i][0];
+        let phonemes = entries[i][1];
+        code += '"' + word +'": [';
+        for (var j = 0; j < phonemes.length; j++) {
+            let phoneme = phonemes[j];
+            code += '"' + phoneme + '"';
+            if (j != phonemes.length - 1) {
+                code += ", ";
+            }
+        }
+        code += "]";
+        if (i != entries.length - 1) {
+            code += ", ";
+        }
+    };
+    code += "};";
+    return code;
+}
+
 function buildRhymeEndDict(dictString) {
     var phonemeStrings = dictString.split("\n");
     var rhymeDict = new Map();
     for (var i = 0; i < phonemeStrings.length; i++) {
         var phonemeString = phonemeStrings[i];
         var [word, ...phonemes] = phonemeString.split(" ");
+        if (word == "") {
+            break;
+        }
+
         phonemes = phonemes.filter( phoneme => phoneme != "" );
         var rhymeEnding = findRhymeEnding(phonemes);
 
@@ -103,12 +138,14 @@ function matchingEndings(phonemesArg1, phonemesArg2) {
     }
 }
 
-var phonemeDict = buildPhonemeDict(dict);
-var rhymeDict = buildRhymeEndDict(dict);
-
+/*
+let phonemeDict = buildPhonemeDict(dict);
+let rhymeDict = buildRhymeEndDict(dict);
+*/
 
 // Sample test code
 
+/*
 var input = "solution";
 
 let inputPhonemes = phonemeDict.get(input.toUpperCase());
@@ -124,3 +161,4 @@ if (rhymeDict.has(inputEnding)) {
     }
     rhymeList.sort( (match1, match2) => match1[0] < match2[0] );
 }
+*/

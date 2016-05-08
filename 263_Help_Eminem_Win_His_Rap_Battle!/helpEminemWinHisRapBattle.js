@@ -25,6 +25,12 @@ var dict = "A  AH0\n" +
            "SOLUTION  S AH0 L UW1 SH AH0 N\n" +
            "ZURKUHLEN   Z ER0 K Y UW1 L AH0 N";
 
+$(document).ready(function() {
+    $("#cmudict").load(function() {
+        let cmudict = window.frames[0].document.body.innerHTML;
+    });
+});
+
 function buildPhonemeDict(dictString) {
     var phonemeStrings = dictString.split("\n");
     var phonemeDict = new Map();
@@ -99,6 +105,10 @@ function matchingEndings(phonemesArg1, phonemesArg2) {
 
 var phonemeDict = buildPhonemeDict(dict);
 var rhymeDict = buildRhymeEndDict(dict);
+
+
+// Sample test code
+
 var input = "solution";
 
 let inputPhonemes = phonemeDict.get(input.toUpperCase());

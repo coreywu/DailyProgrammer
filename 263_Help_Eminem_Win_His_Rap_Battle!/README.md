@@ -1,3 +1,5 @@
+Compile `phonemeDict.html` and `rhymeEndDict.html` by executing the code in `dictCompiler.js`. 
+
 Start Python server:
 
 ```

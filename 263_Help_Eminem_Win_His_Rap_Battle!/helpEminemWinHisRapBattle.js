@@ -25,81 +25,6 @@ var dict = "A  AH0\n" +
            "SOLUTION  S AH0 L UW1 SH AH0 N\n" +
            "ZURKUHLEN   Z ER0 K Y UW1 L AH0 N";
 
-$(document).ready(function() {
-    $("#cmudict").load(function() {
-        let cmudict = window.frames[0].document.body.innerHTML;
-
-        /*
-        let phonemeDict = buildPhonemeDict(cmudict);
-        let phonemeDictCode = compilePhonemeDictCode(phonemeDict);
-        console.log(phonemeDictCode);
-        */
-
-        let rhymeDict = buildRhymeEndDict(cmudict);
-    });
-});
-
-function buildPhonemeDict(dictString) {
-    var phonemeStrings = dictString.split("\n");
-    var phonemeDict = new Map();
-    for (var i = 0; i < phonemeStrings.length; i++) {
-        var phonemeString = phonemeStrings[i];
-        var [word, ...phonemes] = phonemeString.split(" ");
-        phonemes = phonemes.filter( phoneme => phoneme != "" );
-
-        phonemeDict.set(word, phonemes);
-    }
-    console.log(phonemeDict);
-    return phonemeDict;
-}
-
-function compilePhonemeDictCode(phonemeDict) {
-    var code = "let phonemeDict = {";
-    let entries = Array.from(phonemeDict.entries());
-    for (var i = 0; i < entries.length; i++) {
-        let word = entries[i][0];
-        let phonemes = entries[i][1];
-        code += '"' + word +'": [';
-        for (var j = 0; j < phonemes.length; j++) {
-            let phoneme = phonemes[j];
-            code += '"' + phoneme + '"';
-            if (j != phonemes.length - 1) {
-                code += ", ";
-            }
-        }
-        code += "]";
-        if (i != entries.length - 1) {
-            code += ", ";
-        }
-    };
-    code += "};";
-    return code;
-}
-
-function buildRhymeEndDict(dictString) {
-    var phonemeStrings = dictString.split("\n");
-    var rhymeDict = new Map();
-    for (var i = 0; i < phonemeStrings.length; i++) {
-        var phonemeString = phonemeStrings[i];
-        var [word, ...phonemes] = phonemeString.split(" ");
-        if (word == "") {
-            break;
-        }
-
-        phonemes = phonemes.filter( phoneme => phoneme != "" );
-        var rhymeEnding = findRhymeEnding(phonemes);
-
-        if (rhymeDict.has(rhymeEnding)) {
-            var set = rhymeDict.get(rhymeEnding);
-            set.add({ "word": word, "phonemes": phonemes });
-        } else {
-            rhymeDict.set(rhymeEnding, new Set([{ "word": word, "phonemes": phonemes }]));
-        }
-    }
-    console.log(rhymeDict);
-    return rhymeDict;
-}
-
 var vowels = ["AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH", "IY", "OW", "OY", "UH", "UW", "W", "Y"];
 
 /* Returns the last vowel sound and the phonemes after that sound for a given list of phonemes */
@@ -138,27 +63,68 @@ function matchingEndings(phonemesArg1, phonemesArg2) {
     }
 }
 
-/*
-let phonemeDict = buildPhonemeDict(dict);
-let rhymeDict = buildRhymeEndDict(dict);
-*/
+function findRhymes() {
+    var input = $("#word").val();
+    let inputPhonemes = phonemeDict[input.toUpperCase()];
+
+    inputEnding = findRhymeEnding(inputPhonemes);
+    if (inputEnding in rhymeEndDict) {
+        rhymeList = [];
+        var words = rhymeEndDict[inputEnding];
+        for (var i = 0; i < words.length; i++) {
+            word = words[i];
+            let matches = matchingEndings(inputPhonemes, phonemeDict[word]);
+            matches.push(word);
+            matches.push(phonemeDict[word]);
+            rhymeList.push(matches);
+        }
+        rhymeList = rhymeList.sort( (match1, match2) => match2[0] - match1[0] );
+        showMatches(rhymeList);
+    }
+}
+
+function showMatches(rhymeList) {
+    clearTableRows();
+    var table = document.getElementById("rhymeTable");
+
+    for (var i = 0; i < rhymeList.length; i++) {
+        var newRow = table.rows[1].cloneNode(true);
+        var len = table.rows.length;
+        newRow.cells[0].innerHTML = rhymeList[i][0];
+        newRow.cells[1].innerHTML = rhymeList[i][2];
+        newRow.cells[2].innerHTML = rhymeList[i][3];
+        table.appendChild(newRow);
+    }
+}
+
+function clearTableRows() {
+    var table = document.getElementById("rhymeTable");
+    var tableRows = table.getElementsByTagName('tr');
+    var rowCount = tableRows.length;
+
+    for (var i = rowCount - 1; i > 1; i--) {
+        table.removeChild(tableRows[i]);
+    }
+}
 
 // Sample test code
+$(document).ready(function() {
+    var input = "solution";
 
-/*
-var input = "solution";
+    let inputPhonemes = phonemeDict[input.toUpperCase()];
 
-let inputPhonemes = phonemeDict.get(input.toUpperCase());
-
-inputEnding = findRhymeEnding(inputPhonemes);
-if (rhymeDict.has(inputEnding)) {
-    rhymeList = [];
-    var set = rhymeDict.get(inputEnding);
-    for (let item of set) {
-        let matches = matchingEndings(inputPhonemes, item["phonemes"]);
-        console.log("Matches: " + matches[0] + " : " + matches[1]);
-        rhymeList.push(matches);
+    inputEnding = findRhymeEnding(inputPhonemes);
+    if (inputEnding in rhymeEndDict) {
+        rhymeList = [];
+        var words = rhymeEndDict[inputEnding];
+        for (var i = 0; i < words.length; i++) {
+            word = words[i];
+            let matches = matchingEndings(inputPhonemes, phonemeDict[word]);
+            matches.push(word);
+            matches.push(phonemeDict[word]);
+            rhymeList.push(matches);
+        }
+        rhymeList = rhymeList.sort( (match1, match2) => match2[0] - match1[0] );
+        showMatches(rhymeList);
     }
-    rhymeList.sort( (match1, match2) => match1[0] < match2[0] );
-}
-*/
+});
